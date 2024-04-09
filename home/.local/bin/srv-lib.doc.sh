@@ -22,7 +22,6 @@ srv_lib_remove_line_from_file() {
 # - I consider 100-999 to be reserved by distros (it is the case in Debian...?)
 # - I use an offset of 1000 for normal users
 # - I use the 'venv_id' of LXC containers as their linux uid, I use values between 2000 and 3000
-
 srv_lib_add_group_and_user() {
     local id="$1"
     local name="$2"
@@ -58,7 +57,6 @@ srv_lib_generate_mac_address() {
 
     echo "${prefix}:${last_two_bytes_hex:0:2}:${last_two_bytes_hex:2:2}"
 }
-
 
 # The lxc.idmap configuration has a bit of a funky syntax.
 # The most common and basic case is to express that:
@@ -127,7 +125,6 @@ srv_lib_mount_rootfs_and_change_ownership_to_new_lxc_idmaps()
 {
     local venv_id=$1
     local venv_user_name=$2
-
 
     pct mount ${venv_id}
     find "/var/lib/lxc/${venv_id}/rootfs" -user 100000 -exec chown ${venv_user_name} {} \;
