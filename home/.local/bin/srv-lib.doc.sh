@@ -1,8 +1,39 @@
 #!/usr/bin/env bash
 
-set -x
+export SRV_LIB_BASENAME="srv-lib.doc.sh" #TODO GAG can I use $0, given that I source this file?
 
-SRV_LIB_BASENAME="srv-lib.doc.sh" #TODO GAG can I use $0, given that I source this file?
+export SRV_ZFS_POOLS_DIR=/zfs
+export SRV_HDD_POOL_BASENAME=trinity-hdd
+export SRV_SSD_POOL_BASENAME=trinity-ssd
+
+export SRV_PVE_VMS_DATASET_BASENAME=pve-vms-encrypted
+export SRV_PVE_BACKUPS_DATASET_BASENAME=pve-backups-encrypted
+export SRV_PVE_ISOS_DATASET_BASENAME=pve-isos-encrypted
+export SRV_USERS_DATASET_BASENAME=srv-users-encrypted
+#TODO GAG use (specially) this variable...
+export SRV_LXC_MPS_DATASET_BASENAME=srv-lxc-mps-encrypted
+export SRV_BACKUPS_DATASET_BASENAME=srv-backups-encrypted
+
+#TODO GAG check if this can leak to logs with set -x
+srv_prompt_for_password_with_confirmation() {
+    local prompt=$1
+    echo "${prompt}"
+
+    while true; do
+        read -rsp "Enter password: " srv_password
+        echo
+        read -rsp "Confirm password: " srv_password_confirmation
+        echo
+
+        if [ "$srv_password" = "$srv_password_confirmation" ]; then
+            break
+        else
+            echo "Passwords do not match, please try again."
+        fi
+    done
+
+    echo "$srv_password"
+}
 
 srv_lib_add_line_to_file_if_not_present() {
     local line="$1"
