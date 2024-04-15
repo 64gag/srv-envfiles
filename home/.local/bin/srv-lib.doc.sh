@@ -16,19 +16,12 @@ export SRV_BACKUPS_DATASET_BASENAME=srv-backups-encrypted
 
 #TODO GAG check if this can leak to logs with set -x
 srv_prompt_for_password_with_confirmation() {
-    local prompt=$1
-    echo "${prompt}"
-
     while true; do
         read -rsp "Enter password: " srv_password
-        echo
         read -rsp "Confirm password: " srv_password_confirmation
-        echo
 
         if [ "$srv_password" = "$srv_password_confirmation" ]; then
             break
-        else
-            echo "Passwords do not match, please try again."
         fi
     done
 

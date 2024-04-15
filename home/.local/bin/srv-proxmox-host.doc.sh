@@ -2,10 +2,6 @@
 
 source "$(dirname "$0")/srv-lib.doc.sh"
 
-append_example_network_config_to_file() {
-    local to_file=$1
-}
-
 if [[ $SRV_STEP -eq 0 ]]; then
     echo ""
     echo "=== INSTALLING FROM DEBIAN ==="
@@ -37,12 +33,14 @@ if [[ $SRV_STEP -eq 0 ]]; then
     echo "Note that 'groupadd' and 'useradd' automatically add non-overlapping entries to these files"
 elif [[ $SRV_STEP -eq 1 ]]; then
     srv_lib_add_group_and_user 1000 gag
+    srv_lib_add_line_to_file_if_not_present "blacklist iwlwifi" /etc/modprobe.d/srv-wifi-blacklist.conf
     echo "deb [arch=amd64] http://download.proxmox.com/debian/pve bookworm pve-no-subscription" > /etc/apt/sources.list.d/pve-install-repo.list
     wget https://enterprise.proxmox.com/debian/proxmox-release-bookworm.gpg -O /etc/apt/trusted.gpg.d/proxmox-release-bookworm.gpg
     apt update && apt -y full-upgrade && apt install -y proxmox-default-kernel
     echo "NOTE: reboot now if everything went well and then run next SRV_STEP"
+    echo "NOTE: Actually I could not boot on the new kernel until I removed previous kernels (during install 2024-04)"
 elif [[ $SRV_STEP -eq 2 ]]; then
-    apt install -y proxmox-ve postfix open-iscsi chrony bridge-utils vim
+    apt install -y proxmox-ve postfix open-iscsi chrony bridge-utils vim screen
     apt remove -y linux-image-amd64 'linux-image-6.1*' os-prober
 elif [[ $SRV_STEP -eq 3 ]]; then
     manual_input_examples_tmp_file=$(mktemp --suffix=-srv)
@@ -98,37 +96,52 @@ elif [[ $SRV_STEP -eq 5 ]]; then
         mirror /dev/disk/by-id/ata-WDC_WD40EFZX-68AWUN0_WD-WX72D220JXLZ /dev/disk/by-id/ata-ST4000VN006-3CW104_ZW602V1Z \
         mirror /dev/disk/by-id/ata-WDC_WD40EFZX-68AWUN0_WD-WX32D12FCE4R /dev/disk/by-id/ata-ST4000VN006-3CW104_ZW602HKY"
     echo "zpool create -m \"${SRV_ZFS_POOLS_DIR}/${SRV_SSD_POOL_BASENAME}\" -o ashift=12 \"${SRV_SSD_POOL_BASENAME}\" \
-        mirror /dev/disk/by-id/XXX-ssd1 /dev/disk/by-id/XXX-ssd2"
+        mirror /dev/disk/by-id/ata-Samsung_SSD_870_EVO_1TB_S626NX0RA17704F /dev/disk/by-id/ata-Samsung_SSD_860_EVO_1TB_S3Z9NS0N507502F"
 elif [[ $SRV_STEP -eq 6 ]]; then
-    local zfs_encryption_passphrase=$(srv_prompt_for_password_with_confirmation "ZFS encryption passphrase setup")
+    zfs_encryption_passphrase=$(srv_prompt_for_password_with_confirmation "ZFS encryption passphrase setup")
+    echo "PASSPHRASE = ${zfs_encryption_passphrase}"
 
     #TODO GAG re-evaluate the following limit:
     srv_lib_add_line_to_file_if_not_present "options zfs zfs_arc_max=17179869184" /etc/modprobe.d/zfs.conf
 
-    systemctl enable "zfs-import@${SRV_HDD_POOL_BASENAME}.service" # TODO GAG what is this for?
-    systemctl enable "zfs-import@${SRV_SSD_POOL_BASENAME}.service" # TODO GAG what is this for?
+    # TODO GAG what is this for? they even fail on boot... how can I achieve the same benefits (if any) without them?
+    systemctl enable "zfs-import@${SRV_HDD_POOL_BASENAME}.service"
+    systemctl enable "zfs-import@${SRV_SSD_POOL_BASENAME}.service"
 
-    zfs create -o compression=on -o encryption=on -o keyformat=passphrase -o keylocation=prompt ${SRV_SSD_POOL_BASENAME}/${SRV_USERS_DATASET_BASENAME}
-    zfs create -o compression=on -o encryption=on -o keyformat=passphrase -o keylocation=prompt ${SRV_SSD_POOL_BASENAME}/${SRV_LXC_MPS_DATASET_BASENAME}
-    zfs create -o compression=on -o encryption=on -o keyformat=passphrase -o keylocation=prompt ${SRV_SSD_POOL_BASENAME}/${SRV_PVE_VMS_DATASET_BASENAME}
-    zfs create -o compression=on -o encryption=on -o keyformat=passphrase -o keylocation=prompt ${SRV_HDD_POOL_BASENAME}/${SRV_LXC_MPS_DATASET_BASENAME}
-    zfs create -o compression=on -o encryption=on -o keyformat=passphrase -o keylocation=prompt ${SRV_HDD_POOL_BASENAME}/${SRV_USERS_DATASET_BASENAME}
-    zfs create -o compression=on -o encryption=on -o keyformat=passphrase -o keylocation=prompt ${SRV_HDD_POOL_BASENAME}/${SRV_PVE_VMS_DATASET_BASENAME}
-    zfs create -o compression=on -o encryption=on -o keyformat=passphrase -o keylocation=prompt ${SRV_HDD_POOL_BASENAME}/${SRV_PVE_BACKUPS_DATASET_BASENAME}
-    zfs create -o compression=on -o encryption=on -o keyformat=passphrase -o keylocation=prompt ${SRV_HDD_POOL_BASENAME}/${SRV_PVE_ISOS_DATASET_BASENAME}
-    zfs create -o compression=on -o encryption=on -o keyformat=passphrase -o keylocation=prompt ${SRV_HDD_POOL_BASENAME}/${SRV_BACKUPS_DATASET_BASENAME}
+    echo "${zfs_encryption_passphrase}" | zfs create -o compression=on -o encryption=on -o keyformat=passphrase -o keylocation=prompt ${SRV_SSD_POOL_BASENAME}/${SRV_USERS_DATASET_BASENAME}
+    echo "${zfs_encryption_passphrase}" | zfs create -o compression=on -o encryption=on -o keyformat=passphrase -o keylocation=prompt ${SRV_SSD_POOL_BASENAME}/${SRV_LXC_MPS_DATASET_BASENAME}
+    echo "${zfs_encryption_passphrase}" | zfs create -o compression=on -o encryption=on -o keyformat=passphrase -o keylocation=prompt ${SRV_SSD_POOL_BASENAME}/${SRV_PVE_VMS_DATASET_BASENAME}
+    echo "${zfs_encryption_passphrase}" | zfs create -o compression=on -o encryption=on -o keyformat=passphrase -o keylocation=prompt ${SRV_HDD_POOL_BASENAME}/${SRV_LXC_MPS_DATASET_BASENAME}
+    echo "${zfs_encryption_passphrase}" | zfs create -o compression=on -o encryption=on -o keyformat=passphrase -o keylocation=prompt ${SRV_HDD_POOL_BASENAME}/${SRV_USERS_DATASET_BASENAME}
+    echo "${zfs_encryption_passphrase}" | zfs create -o compression=on -o encryption=on -o keyformat=passphrase -o keylocation=prompt ${SRV_HDD_POOL_BASENAME}/${SRV_PVE_VMS_DATASET_BASENAME}
+    echo "${zfs_encryption_passphrase}" | zfs create -o compression=on -o encryption=on -o keyformat=passphrase -o keylocation=prompt ${SRV_HDD_POOL_BASENAME}/${SRV_PVE_BACKUPS_DATASET_BASENAME}
+    echo "${zfs_encryption_passphrase}" | zfs create -o compression=on -o encryption=on -o keyformat=passphrase -o keylocation=prompt ${SRV_HDD_POOL_BASENAME}/${SRV_PVE_ISOS_DATASET_BASENAME}
+    echo "${zfs_encryption_passphrase}" | zfs create -o compression=on -o encryption=on -o keyformat=passphrase -o keylocation=prompt ${SRV_HDD_POOL_BASENAME}/${SRV_BACKUPS_DATASET_BASENAME}
 
     #-o acltype=posix  #TODO GAG I had set acltypes, was it for samba? do I really need it?
 
     # TODO GAG can the following steps be done from the command line?
     cat <<EOF
-    Then on "datacenter", add each dataset as "Directory" storage. ID: POOL-DATASET, Directory: /zfs/POOL/DATASET
-    - For pve-isos select Content: ISO image + container template
-    - For pve-vms, select Content: Disk image + containers
-    - For pve-backups, select Content: VZDump + snippets
+    Then on "datacenter", add each PVE dataset as "Directory" storage.
+    - Content: Disk image + containers
+        - ID: "${SRV_SSD_POOL_BASENAME}/${SRV_PVE_VMS_DATASET_BASENAME}"
+        - Directory: "${SRV_ZFS_POOLS_DIR}/${SRV_SSD_POOL_BASENAME}/${SRV_PVE_VMS_DATASET_BASENAME}"
+
+        - ID: "${SRV_HDD_POOL_BASENAME}/${SRV_PVE_VMS_DATASET_BASENAME}"
+        - Directory: "${SRV_ZFS_POOLS_DIR}/${SRV_HDD_POOL_BASENAME}/${SRV_PVE_VMS_DATASET_BASENAME}"
+
+    - Content: VZDump + snippets
+        - ID: "${SRV_HDD_POOL_BASENAME}/${SRV_PVE_BACKUPS_DATASET_BASENAME}"
+        - Directory: "${SRV_ZFS_POOLS_DIR}/${SRV_HDD_POOL_BASENAME}/${SRV_PVE_BACKUPS_DATASET_BASENAME}"
+
+    - Content: ISO image + container template
+        - ID: "${SRV_HDD_POOL_BASENAME}/${SRV_PVE_ISOS_DATASET_BASENAME}"
+        - Directory: "${SRV_ZFS_POOLS_DIR}/${SRV_HDD_POOL_BASENAME}/${SRV_PVE_ISOS_DATASET_BASENAME}"
 EOF
     zfs mount -l -a
 elif [[ $SRV_STEP -eq 7 ]]; then
+    echo "TODO GAG install diplicity"
+elif [[ $SRV_STEP -eq 8 ]]; then
     # TODO GAG-01-srv-proxmox-host.doc.sh
     echo "https://www.cyberciti.biz/security/how-to-unlock-luks-using-dropbear-ssh-keys-remotely-in-linux/"
     echo "https://www.reddit.com/r/zfs/comments/10qg6yo/openzfs_2171_on_debian_how_to_auto_mount_natively/"
