@@ -16,10 +16,11 @@ venv_start_on_boot=1
 venv_lxc_unprivileged=1
 venv_features=fuse=1,nesting=1
 
+venv_mps_host_base_dir="${SRV_ZFS_POOLS_DIR}/${SRV_HDD_POOL_BASENAME}/${SRV_LXC_MPS_DATASET_BASENAME}/${venv_id}"
 venv_mp0_guest_dir="/etc/nginx/sites-available"
-venv_mp0_host_dir="/zfs/trinity-hdd/srv-lxc-mps-encrypted/${venv_id}${venv_mp0_guest_dir}"
+venv_mp0_host_dir="${venv_mps_host_base_dir}${venv_mp0_guest_dir}"
 venv_mp1_guest_dir="/etc/letsencrypt"
-venv_mp1_host_dir="/zfs/trinity-hdd/srv-lxc-mps-encrypted/${venv_id}${venv_mp1_guest_dir}"
+venv_mp1_host_dir="${venv_mps_host_base_dir}${venv_mp1_guest_dir}"
 
 script_basename="$(basename "$0")"
 
@@ -60,8 +61,7 @@ case $1 in
         srv_lib_remove_line_from_file "root:${venv_id}:1" "/etc/subuid"
         srv_lib_remove_line_from_file "root:${venv_id}:1" "/etc/subgid"
         srv_lib_remove_group_and_user "${venv_user_name}"
-        rm -rf "${venv_mp0_host_dir}"
-        rm -rf "${venv_mp1_host_dir}"
+        rm -rf "${venv_mps_host_base_dir}"
         ;;
     "guest-create")
         apt update && apt upgrade -y
@@ -103,6 +103,6 @@ EOF
         pct ${action} ${venv_id} "$@"
         ;;
     *)
-        echo "${script}: Unsupported or unknown action $1"
+        echo "${script_basename}: Unsupported or unknown action $1"
         ;;
 esac

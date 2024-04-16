@@ -74,6 +74,6 @@ case $1 in
         pct ${action} ${venv_id} "$@"
         ;;
     *)
-        echo "${script}: Unsupported or unknown action $1"
+        echo "${script_basename}: Unsupported or unknown action $1"
         ;;
 esac

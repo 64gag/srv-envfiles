@@ -16,11 +16,12 @@ venv_start_on_boot=1
 venv_lxc_unprivileged=1
 venv_features=nesting=1
 
-venv_mps_host_base_dir="/zfs/trinity-hdd/srv-lxc-mps-encrypted/${venv_id}"
+venv_mps_host_base_dir="${SRV_ZFS_POOLS_DIR}/${SRV_HDD_POOL_BASENAME}/${SRV_LXC_MPS_DATASET_BASENAME}/${venv_id}"
 venv_mp0_guest_dir="/venv/nextcloud_datadir"
 venv_mp0_host_dir="${venv_mps_host_base_dir}${venv_mp0_guest_dir}"
 venv_mp1_guest_dir="/var/lib/docker/volumes"
 venv_mp1_host_dir="${venv_mps_host_base_dir}${venv_mp1_guest_dir}"
+#TODO GAG what is missing (a mountpoint and some config?) to backup the "database"?
 
 script_basename="$(basename "$0")"
 
@@ -72,7 +73,7 @@ case $1 in
         srv_lib_remove_line_from_file "root:${venv_id}:1" "/etc/subuid"
         srv_lib_remove_line_from_file "root:${venv_id}:1" "/etc/subgid"
         srv_lib_remove_group_and_user "${venv_user_name}"
-        #rm -rf "${venv_mps_host_base_dir}" #TODO GAG propagate to other LXCs # NOTE commented for nextcloud because it is quite dangerous...
+        #rm -rf "${venv_mps_host_base_dir}" # NOTE commented for nextcloud because it is quite dangerous...
         ;;
     "guest-create")
         apt update && apt upgrade -y
@@ -98,16 +99,16 @@ case $1 in
             --volume nextcloud_aio_mastercontainer:/mnt/docker-aio-config \
             --volume /var/run/docker.sock:/var/run/docker.sock:ro \
             nextcloud/all-in-one:latest
-                    ;;
         echo "- Now go ahead and open the AIO interface: https://ip.address.of.the.host:8080"
         echo "- Then configure the reverse proxy"
         echo "- Finally, submit the domain via the AIO interface"
+        ;;
     start|stop|destroy|mount|unmount)
         action=$1
         shift
         pct ${action} ${venv_id} "$@"
         ;;
     *)
-        echo "${script}: Unsupported or unknown action $1"
+        echo "${script_basename}: Unsupported or unknown action $1"
         ;;
 esac
