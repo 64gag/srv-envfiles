@@ -102,6 +102,7 @@ case $1 in
         echo "- Now go ahead and open the AIO interface: https://ip.address.of.the.host:8080"
         echo "- Then configure the reverse proxy"
         echo "- Finally, submit the domain via the AIO interface"
+        echo "root@lxc-2001-ubuntu-nextcloud:~# docker container exec -u 33 nextcloud-aio-nextcloud /var/www/html/occ files:scan --all"
         ;;
     start|stop|destroy|mount|unmount)
         action=$1
