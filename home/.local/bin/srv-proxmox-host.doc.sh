@@ -124,18 +124,18 @@ elif [[ $SRV_STEP -eq 6 ]]; then
     cat <<EOF
     Then on "datacenter", add each PVE dataset as "Directory" storage.
     - Content: Disk image + containers
-        - ID: "${SRV_SSD_POOL_BASENAME}/${SRV_PVE_VMS_DATASET_BASENAME}"
+        - ID: "${SRV_STORAGE_ID_SSD_PVE_VMS}"
         - Directory: "${SRV_ZFS_POOLS_DIR}/${SRV_SSD_POOL_BASENAME}/${SRV_PVE_VMS_DATASET_BASENAME}"
 
-        - ID: "${SRV_HDD_POOL_BASENAME}/${SRV_PVE_VMS_DATASET_BASENAME}"
+        - ID: "${SRV_STORAGE_ID_HDD_PVE_VMS}"
         - Directory: "${SRV_ZFS_POOLS_DIR}/${SRV_HDD_POOL_BASENAME}/${SRV_PVE_VMS_DATASET_BASENAME}"
 
     - Content: VZDump + snippets
-        - ID: "${SRV_HDD_POOL_BASENAME}/${SRV_PVE_BACKUPS_DATASET_BASENAME}"
+        - ID: "${SRV_STORAGE_ID_HDD_PVE_BACKUPS}"
         - Directory: "${SRV_ZFS_POOLS_DIR}/${SRV_HDD_POOL_BASENAME}/${SRV_PVE_BACKUPS_DATASET_BASENAME}"
 
     - Content: ISO image + container template
-        - ID: "${SRV_HDD_POOL_BASENAME}/${SRV_PVE_ISOS_DATASET_BASENAME}"
+        - ID: "${SRV_STORAGE_ID_HDD_PVE_ISOS}"
         - Directory: "${SRV_ZFS_POOLS_DIR}/${SRV_HDD_POOL_BASENAME}/${SRV_PVE_ISOS_DATASET_BASENAME}"
 EOF
     zfs mount -l -a

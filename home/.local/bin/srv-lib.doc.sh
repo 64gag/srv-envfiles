@@ -2,6 +2,8 @@
 
 export SRV_LIB_BASENAME="srv-lib.doc.sh" #TODO GAG can I use $0, given that I source this file?
 
+
+# === STORAGE CONSTANTS ====
 export SRV_ZFS_POOLS_DIR=/zfs
 export SRV_HDD_POOL_BASENAME=trinity-hdd
 export SRV_SSD_POOL_BASENAME=trinity-ssd
@@ -13,6 +15,39 @@ export SRV_USERS_DATASET_BASENAME=srv-users-encrypted
 #TODO GAG use (specially) this variable...
 export SRV_LXC_MPS_DATASET_BASENAME=srv-lxc-mps-encrypted
 export SRV_BACKUPS_DATASET_BASENAME=srv-backups-encrypted
+
+export SRV_STORAGE_ID_SSD_PVE_VMS="${SRV_SSD_POOL_BASENAME}-${SRV_PVE_VMS_DATASET_BASENAME}"
+export SRV_STORAGE_ID_HDD_PVE_VMS="${SRV_HDD_POOL_BASENAME}-${SRV_PVE_VMS_DATASET_BASENAME}"
+export SRV_STORAGE_ID_HDD_PVE_BACKUPS="${SRV_HDD_POOL_BASENAME}-${SRV_PVE_BACKUPS_DATASET_BASENAME}"
+export SRV_STORAGE_ID_HDD_PVE_ISOS="${SRV_HDD_POOL_BASENAME}-${SRV_PVE_ISOS_DATASET_BASENAME}"
+
+# === PCIE CONSTANTS ====
+export SRV_HOSTPCI_PCIE_ENABLED="pcie=1"
+export SRV_HOSTPCI_XVGA_ENABLED="x-vga=1"
+
+export SRV_PCIE_ADDR_WIFI="0000:03:00.0"
+export SRV_PCIE_ADDR_USB_MISC="0000:06:00" # webcam, bluetooth, case's front USB 3.0
+export SRV_PCIE_ADDR_GPU="0000:0c:00"
+export SRV_PCIE_ADDR_MOBO_TOP4="0000:0e:00.3"
+export SRV_PCIE_ADDR_AUDIO="0000:0e:00.4"
+
+export SRV_HOSTPCI_WIFI="${SRV_PCIE_ADDR_WIFI},${SRV_HOSTPCI_PCIE_ENABLED}"
+export SRV_HOSTPCI_USB_MISC="${SRV_PCIE_ADDR_USB_MISC},${SRV_HOSTPCI_PCIE_ENABLED}"
+export SRV_HOSTPCI_GPU="${SRV_PCIE_ADDR_GPU},${SRV_HOSTPCI_PCIE_ENABLED},${SRV_HOSTPCI_XVGA_ENABLED}"
+export SRV_HOSTPCI_MOBO_TOP4="${SRV_PCIE_ADDR_MOBO_TOP4},${SRV_HOSTPCI_PCIE_ENABLED}"
+export SRV_HOSTPCI_AUDIO="${SRV_PCIE_ADDR_AUDIO},${SRV_HOSTPCI_PCIE_ENABLED}"
+
+# === MISC CONSTANTS ====
+export SRV_NET_MAC_ADDR_PREFIX="BC:24:11:64"
+
+srv_check_vars_not_null_string() {
+    for var_name in "$@"; do
+        if [ -z "${!var_name}" ]; then
+            echo "Error: $var_name is unset or empty."
+            return 1
+        fi
+    done
+}
 
 #TODO GAG check if this can leak to logs with set -x
 srv_prompt_for_password_with_confirmation() {
@@ -46,6 +81,7 @@ srv_lib_remove_line_from_file() {
 # - I consider 100-999 to be reserved by distros (it is the case in Debian...?)
 # - I use an offset of 1000 for normal users
 # - I use the 'venv_id' of LXC containers as their linux uid, I use values between 2000 and 3000
+# - I may use the 'venv_id' of VM as their linux uid, I use values between 3000 and 4000
 srv_lib_add_group_and_user() {
     local id="$1"
     local name="$2"

@@ -10,7 +10,7 @@ venv_storage=trinity-hdd-pve-vms
 venv_rootfs=trinity-hdd-pve-vms:4
 venv_cores=2
 venv_memory_MB=2048
-venv_net_if=name="eth0,bridge=vmbr0,hwaddr=$(srv_lib_generate_mac_address "BC:24:11:64" $venv_id),ip=dhcp"
+venv_net_if=name="eth0,bridge=vmbr0,hwaddr=$(srv_lib_generate_mac_address ${SRV_NET_MAC_ADDR_PREFIX} $venv_id),ip=dhcp"
 venv_pubkeys=/root/.ssh/authorized_keys
 venv_start_on_boot=0
 venv_lxc_unprivileged=1
