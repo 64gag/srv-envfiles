@@ -40,7 +40,7 @@ elif [[ $SRV_STEP -eq 1 ]]; then
     echo "NOTE: reboot now if everything went well and then run next SRV_STEP"
     echo "NOTE: Actually I could not boot on the new kernel until I removed previous kernels (during install 2024-04)"
 elif [[ $SRV_STEP -eq 2 ]]; then
-    apt install -y proxmox-ve postfix open-iscsi chrony bridge-utils vim screen
+    apt install -y proxmox-ve postfix open-iscsi chrony bridge-utils vim screen avahi-daemon
     apt remove -y linux-image-amd64 'linux-image-6.1*' os-prober
 elif [[ $SRV_STEP -eq 3 ]]; then
     manual_input_examples_tmp_file=$(mktemp --suffix=-srv)
@@ -140,7 +140,28 @@ elif [[ $SRV_STEP -eq 6 ]]; then
 EOF
     zfs mount -l -a
 elif [[ $SRV_STEP -eq 7 ]]; then
-    echo "TODO GAG install diplicity"
+    apt install -y python3-full gettext librsync-dev
+    #dnf install python3 gettext librsync-devel
+    python3 -m venv /opt/python3-venv
+    source /opt/python3-venv/bin/activate
+    /opt/python3-venv/bin/pip3 install googleapi
+    /opt/python3-venv/bin/pip3 install google-auth-oauthlib
+    /opt/python3-venv/bin/pip3 install duplicity
+    /opt/python3-venv/bin/pip3 install fasteners
+    cat <<EOF
+    # Create a google app, to upload with it to your google drive"
+    - https://console.cloud.google.com/welcome?project=PROJECT"
+    - "APIs & Services" -> "Credentials"
+    - Put the JSON in /zfs/trinity-hdd/srv-backups-encrypted/.duplicity/
+    # Configuration
+    - Install the config etc/srv/srv-proxmox-host.doc.sh.conf file in this repository
+    - Then the simplest thing to do is to run a backup on a PC with a graphic environment once, since you will be prompted to approve the app via a web browser prompt
+    - scp /zfs/trinity-hdd/srv-backups-encrypted/.duplicity/credentials root@trinity.local:/zfs/trinity-hdd/srv-backups-encrypted/.duplicity/
+    # To run a backup:
+    - source /opt/python3-venv/bin/activate && ~/envfiles-srv/home/.local/bin/srv-backup.doc.sh | tee -a /var/log/srv-backup.doc.sh.log
+    - Be ready to enter your encryption key
+    - It is probably a good idea to configure this to run automatically but, if launched remotely manually, run it from screen (or detach however you want)
+EOF
 elif [[ $SRV_STEP -eq 8 ]]; then
     # TODO GAG-01-srv-proxmox-host.doc.sh
     echo "https://www.cyberciti.biz/security/how-to-unlock-luks-using-dropbear-ssh-keys-remotely-in-linux/"

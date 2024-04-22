@@ -9,7 +9,7 @@ exclude_values+=(/root/.cache /home/*/.cache /home/*/.gvfs /home/*/.local/share/
 exclude_values+=(/tmp)
 
 date=$(date "+%F-%H-%M-%S")
-description="gag-backup"
+description="srv-backup"
 
 # NOTE: all the parameters up to this point can (and probably should) be modified in the following sourced file
 PATH=/etc/srv/:$(readlink "$0"):$PATH source "${script_basename}.conf"
@@ -45,14 +45,8 @@ echo "[${script_basename}] StartTime $(date +%s.%2N) ($(date '+%a %b %d %H:%M:%S
 mkdir -p "${backup_dir}"
 
 if [[ "${backup_tool}" == "duplicity" ]]; then
-    exclude_arguments+=("--exclude")
-    exclude_arguments+=("**/tmp*")
-
     duplicity --full-if-older-than 1M --archive-dir "${backup_dir}" --name "${backup_name}" "${exclude_arguments[@]}" / "${duplicity_target_url}"
 else
-    exclude_arguments+=("--exclude")
-    exclude_arguments+=(tmp*) # duplicity does not like this syntax...
-
     backup_tar_file="${backup_dir}/${backup_name}-${date}.tar.gz"
     backup_tar_checksum_file="${backup_tar_file}.sha256"
     backup_tar_encrypted_file="${backup_tar_file}.gpg"
