@@ -3,13 +3,13 @@
 source "$(dirname "$0")/srv-lib.doc.sh"
 
 venv_id=2002
-venv_user_name=lxc-2002-ubuntu-nana-vids
+venv_user_name=lxc-2002-ubuntu-nana
 
-venv_template=trinity-hdd-pve-isos:vztmpl/debian-12-standard_12.2-1_amd64.tar.zst
-venv_storage=trinity-hdd-pve-vms
-venv_rootfs=trinity-hdd-pve-vms:4
-venv_cores=2
-venv_memory_MB=2048
+venv_template=trinity-hdd-pve-isos-encrypted:vztmpl/ubuntu-23.10-standard_23.10-1_amd64.tar.zst
+venv_storage=trinity-hdd-pve-vms-encrypted
+venv_rootfs=trinity-hdd-pve-vms-encrypted:16
+venv_cores=4
+venv_memory_MB=$((8 * 1024))
 venv_net_if=name="eth0,bridge=vmbr0,hwaddr=$(srv_lib_generate_mac_address ${SRV_NET_MAC_ADDR_PREFIX} $venv_id),ip=dhcp"
 venv_pubkeys=/root/.ssh/authorized_keys
 venv_start_on_boot=0
@@ -60,13 +60,12 @@ case $1 in
     "guest-create")
         apt update && apt upgrade -y
         apt install -y avahi-daemon
-        apt install -y nodejs npm
+        apt install -y nodejs npm ffmpeg
         npm install express
         npm install multer
         npm install passport passport-local
         npm install mongoose
         npm install bcrypt
-        npm install fluent-ffmpeg
         ;;
     start|stop|destroy|mount|unmount)
         action=$1
