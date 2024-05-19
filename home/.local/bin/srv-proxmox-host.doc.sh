@@ -16,7 +16,7 @@ if [[ $SRV_STEP -eq 0 ]]; then
     echo "- Install (check) only 'SSH server' and 'standard system utilities'"
     echo "- In '/etc/ssh/sshd_config' temporarily set 'PermitRootLogin yes', then 'systemctl restart sshd' and copy your SSH public key"
     echo "- Finally re-run this script specifying SRV_STEP=1"
-    echo "- NOTE: to get this script apt update && apt install -y git && git clone https://github.com/64gag/envfiles-srv/"
+    echo "- NOTE: to get this script apt update && apt install -y git && git clone https://github.com/64gag/srv-envfiles/"
     echo ""
     echo "=== INSTALLING FROM PROXMOX ==="
     echo "- Finally re-run this script specifying SRV_STEP=5 (from ZFS)"
@@ -118,7 +118,7 @@ elif [[ $SRV_STEP -eq 6 ]]; then
     echo "${zfs_encryption_passphrase}" | zfs create -o compression=on -o encryption=on -o keyformat=passphrase -o keylocation=prompt ${SRV_HDD_POOL_BASENAME}/${SRV_PVE_ISOS_DATASET_BASENAME}
     echo "${zfs_encryption_passphrase}" | zfs create -o compression=on -o encryption=on -o keyformat=passphrase -o keylocation=prompt ${SRV_HDD_POOL_BASENAME}/${SRV_BACKUPS_DATASET_BASENAME}
 
-    #-o acltype=posix  #TODO GAG I had set acltypes, was it for samba? do I really need it?
+    #-o acltype=posix  #TODO GAG I had set acltypes (in the original doc/log spreadsheet), was it for samba? do I really need it?
 
     # TODO GAG can the following steps be done from the command line?
     cat <<EOF
@@ -157,13 +157,24 @@ elif [[ $SRV_STEP -eq 7 ]]; then
     - Install the config etc/srv/srv-proxmox-host.doc.sh.conf file in this repository
     - Then the simplest thing to do is to run a backup on a PC with a graphic environment once, since you will be prompted to approve the app via a web browser prompt
     - scp /zfs/trinity-hdd/srv-backups-encrypted/.duplicity/credentials root@trinity.local:/zfs/trinity-hdd/srv-backups-encrypted/.duplicity/
-    # To run a backup:
-    - source /opt/python3-venv/bin/activate && ~/envfiles-srv/home/.local/bin/srv-backup.doc.sh | tee -a /var/log/srv-backup.doc.sh.log
-    - Be ready to enter your encryption key
-    - It is probably a good idea to configure this to run automatically but, if launched remotely manually, run it from screen (or detach however you want)
+    - Do NOT forget: chmod -R o-rwx /zfs/trinity-hdd/srv-backups-encrypted/.duplicity/
 EOF
+    # TODO GAG document restore and other useful knowledge about backups still in the excel file
 elif [[ $SRV_STEP -eq 8 ]]; then
     # TODO GAG-01-srv-proxmox-host.doc.sh
     echo "https://www.cyberciti.biz/security/how-to-unlock-luks-using-dropbear-ssh-keys-remotely-in-linux/"
     echo "https://www.reddit.com/r/zfs/comments/10qg6yo/openzfs_2171_on_debian_how_to_auto_mount_natively/"
+elif [[ $SRV_STEP -eq 100 ]]; then
+    cat <<- EOF >> "/etc/motd"
+    # SRV
+
+    ## LXC
+    - Update LXC templates with: pveam update
+    - List available LXC templates: pveam list trinity-hdd-pve-isos-encrypted
+
+    ## Backup
+    - source /opt/python3-venv/bin/activate && ~/srv-envfiles/home/.local/bin/srv-backup.doc.sh | tee -a /var/log/srv-backup.doc.sh.log
+    - Be ready to enter your encryption key
+    - It is probably a good idea to configure this to run automatically but, if launched manually and remotely, detach somehow (ie. screen)
+EOF
 fi
