@@ -202,6 +202,7 @@ srv_lib_mount_rootfs_and_change_ownership_to_new_lxc_idmaps()
     find / -group ${venv_id}
     echo "LEAKED FILES END"
     # TODO GAG exclude mp to avoid fixing persmissions later
+    # TODO GAG, exclude /proc since it is useless and adds spam to output
 }
 
 srv_lib_start_and_create_guest()

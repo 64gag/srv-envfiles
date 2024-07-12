@@ -77,7 +77,7 @@ case $1 in
         ;;
     "guest-create")
         apt update && apt upgrade -y
-        apt install -y avahi-daemon
+        apt install -y avahi-daemon #TODO GAG exiftool, dedup or something
         srv_lib_install_docker_on_ubuntu
 
         # What I was using on cloud.kymasoft.com:
@@ -103,6 +103,7 @@ case $1 in
         echo "- Then configure the reverse proxy"
         echo "- Finally, submit the domain via the AIO interface"
         echo "root@lxc-2001-ubuntu-nextcloud:~# docker container exec -u 33 nextcloud-aio-nextcloud /var/www/html/occ files:scan --all"
+        echo "docker container exec -u 33 nextcloud-aio-nextcloud /var/www/html/occ security:bruteforce:reset 192.168.1.70"
         ;;
     start|stop|destroy|mount|unmount)
         action=$1

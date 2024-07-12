@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-
+# $0 create --venv-id 3012 --venv-name fr-mich --disk-size-gib 64
 source "$(dirname "$0")/srv-lib.doc.sh"
 
 srv_arg_cores=12

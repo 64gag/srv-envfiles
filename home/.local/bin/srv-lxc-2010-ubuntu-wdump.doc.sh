@@ -58,10 +58,16 @@ case $1 in
         rm -rf "${venv_mp0_host_dir}"
         ;;
     "guest-create")
-        apt update && apt upgrade -y
-        #apt install -y ruby
+        apt-get update && apt-get upgrade -y
+        apt-get install -y avahi-daemon
+        apt-get install -y ruby bzip2
+        gem install activesupport
+        gem install nokogiri
+        mkdir -p "${venv_mp0_guest_dir}/cache"
+        mkdir -p "${venv_mp0_guest_dir}/dumps"
+
         ;;
-    start|stop|destroy|mount|unmount)
+    start|stop|destroy|mount|unmount|exec)
         action=$1
         shift
         pct ${action} ${venv_id} "$@"
