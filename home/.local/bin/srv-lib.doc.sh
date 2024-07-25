@@ -192,14 +192,14 @@ srv_lib_mount_rootfs_and_change_ownership_to_new_lxc_idmaps()
     pct unmount ${venv_id}
 
     echo "LEAKED FILES START (should be empty):" # TODO GAG study/investigate this issue
-    find / -user ${venv_id}
-    find / -group ${venv_id}
+    find / \( -path /zfs -o -path /proc \) -prune -o -user ${venv_id}
+    find / \( -path /zfs -o -path /proc \) -prune -o -group ${venv_id}
     echo "Will now fix ownership..."
-    find / -user ${venv_id} -exec chown root {} \;
-    find / -group ${venv_id} -exec chgrp root {} \;
+    find / \( -path /zfs -o -path /proc \) -prune -o -user ${venv_id} -exec chown root {} \;
+    find / \( -path /zfs -o -path /proc \) -prune -o -group ${venv_id} -exec chgrp root {} \;
     echo "Print leaked files again"
-    find / -user ${venv_id}
-    find / -group ${venv_id}
+    find / \( -path /zfs -o -path /proc \) -prune -o -user ${venv_id}
+    find / \( -path /zfs -o -path /proc \) -prune -o -group ${venv_id}
     echo "LEAKED FILES END"
     # TODO GAG exclude mp to avoid fixing persmissions later
     # TODO GAG, exclude /proc since it is useless and adds spam to output
