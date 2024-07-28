@@ -2,8 +2,8 @@
 
 source "$(dirname "$0")/srv-lib.doc.sh"
 
-venv_id=2010
-venv_user_name=lxc-2010-ubuntu-wdump
+venv_id=2008
+venv_user_name=lxc-2008-ubuntu-srep
 
 venv_template=trinity-hdd-pve-isos-encrypted:vztmpl/ubuntu-24.04-standard_24.04-2_amd64.tar.zst
 venv_storage=trinity-hdd-pve-vms-encrypted
@@ -55,17 +55,39 @@ case $1 in
         srv_lib_remove_line_from_file "root:${venv_id}:1" "/etc/subuid"
         srv_lib_remove_line_from_file "root:${venv_id}:1" "/etc/subgid"
         srv_lib_remove_group_and_user "${venv_user_name}"
-        rm -rf "${venv_mp0_host_dir}"
+        #rm -rf "${venv_mp0_host_dir}" # NOTE commented for nextcloud because it is quite dangerous...
         ;;
     "guest-create")
         apt-get update && apt-get upgrade -y
         apt-get install -y avahi-daemon
-        apt-get install -y ruby bzip2
-        gem install activesupport
-        gem install nokogiri
-        mkdir -p "${venv_mp0_guest_dir}/cache"
-        mkdir -p "${venv_mp0_guest_dir}/dumps"
+        apt-get install -y vim git devscripts
+        apt-get install -y debhelper cmake libsqlite3-dev libgtest-dev libgmock-dev # from libsrep debian/control
+        apt-get install -y debhelper cmake libsqlite3-dev libboost-system-dev libboost-filesystem-dev libboost-filesystem1.74.0 # from libfsrep debian/control
+        apt-get install -y ruby ruby-fcgi apache2 libapache2-mod-fcgid # from www-srs debian/control
 
+        #apt-get install -y ruby-fcgi # Removed from www-srs debian/control because it is broken, install manually instead:
+        apt-get install -y libfcgi libfcgi-dev ruby-dev
+        gem install fcgi
+
+        mkdir -p "${venv_mp0_guest_dir}/git"
+        cat <<- EOF >> "/etc/motd"
+        This container is intended to be a full dev and deployment workspace.
+
+        For each of these directories:
+        cd /venv/git/libsrep
+        cd /venv/git/srep-backend
+        cd /venv/git/www-srs
+
+        Do:
+        /venv/git/ki-devscripts/opt/kyma/ki/bin/kibuild.doc.sh deb && dpkg -i debian/*.deb && /venv/git/ki-devscripts/opt/kyma/ki/bin/kibuild.doc.sh clean
+
+        a2enmod fcgid
+        a2dissite 000-default.conf
+        a2ensite www-srs
+        systemctl reload apache2
+
+        systemctl restart apache2
+EOF
         ;;
     start|stop|destroy|mount|unmount|exec)
         action=$1
