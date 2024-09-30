@@ -176,5 +176,18 @@ elif [[ $SRV_STEP -eq 100 ]]; then
     - source /opt/python3-venv/bin/activate && ~/srv-envfiles/home/.local/bin/srv-backup.doc.sh | tee -a /var/log/srv-backup.doc.sh.log
     - Be ready to enter your encryption key
     - It is probably a good idea to configure this to run automatically but, if launched manually and remotely, detach somehow (ie. screen)
+
+    ## Restore
+    - Files important for restore that are not included in backup
+       (but the client_secret_*.json file can be re-downloaded and the token exchange can be run again)
+       root@trinity:~# ls -a /zfs/trinity-hdd/srv-backups-encrypted/.duplicity/*
+       /zfs/trinity-hdd/srv-backups-encrypted/.duplicity/client_secret_816926805381-23drc1c07eba47u5hjsjpemhrgi53lku.apps.googleusercontent.com.json
+       /zfs/trinity-hdd/srv-backups-encrypted/.duplicity/credentials
+    - duplicity --path-to-restore etc/passwd gdrive://816926805381-23drc1c07eba47u5hjsjpemhrgi53lku.apps.googleusercontent.com/pve-backups-duplicity/backup-cfg-5-srv--duplicity-latest-pip--include-tmp?myDriveFolderID=root passwd
+    - For a re-install, re-create users as in file '/etc/passwd'
+
+    ## Misc
+    - zfs mount -l -a
+    - modprobe -r amdgpu
 EOF
 fi
