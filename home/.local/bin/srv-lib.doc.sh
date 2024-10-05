@@ -5,8 +5,8 @@ export SRV_LIB_BASENAME="srv-lib.doc.sh" #TODO GAG can I use $0, given that I so
 
 # === STORAGE CONSTANTS ====
 export SRV_ZFS_POOLS_DIR=/zfs
-export SRV_HDD_POOL_BASENAME=trinity-hdd
-export SRV_SSD_POOL_BASENAME=trinity-ssd
+export SRV_HDD_POOL_BASENAME=hdd
+export SRV_SSD_POOL_BASENAME=ssd
 
 export SRV_PVE_VMS_DATASET_BASENAME=pve-vms-encrypted
 export SRV_PVE_BACKUPS_DATASET_BASENAME=pve-backups-encrypted
@@ -191,7 +191,7 @@ srv_lib_mount_rootfs_and_change_ownership_to_new_lxc_idmaps()
     find "/var/lib/lxc/${venv_id}/rootfs" -group 100000 -exec chgrp ${venv_user_name} {} \;
     pct unmount ${venv_id}
 
-    echo "LEAKED FILES START (should be empty):" # TODO GAG study/investigate this issue
+    echo "LEAKED FILES START (should be empty):" # TODO GAG study/investigate this issue, do I just need to avoid symlinks in the commands above? check if in the same filesystem? what does pct mount do?
     find / \( -path /zfs -o -path /proc \) -prune -o -user ${venv_id}
     find / \( -path /zfs -o -path /proc \) -prune -o -group ${venv_id}
     echo "Will now fix ownership..."
@@ -229,7 +229,7 @@ srv_lib_venv_mp_create()
     mkdir -p "${host_mp_dir}"
     chown "${venv_user_name}:${venv_user_name}" "${host_mp_dir}"
 }
-#pveam list trinity-hdd-pve-isos # TODO GAG
+#pveam list hdd-pve-isos # TODO GAG
 
 # https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository
 srv_lib_install_docker_on_ubuntu()
